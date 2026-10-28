@@ -51,8 +51,8 @@ export function useCase(id?: string) {
 export function useCreateRecord(collection: 'people' | 'cases') {
   const api = useApi();
   const client = useQueryClient();
-  return useMutation<Person | CaseRecord, Error, Record<string, string>>({
-    mutationFn: (values: Record<string, string>) =>
+  return useMutation<Person | CaseRecord, Error, Record<string, string | string[]>>({
+    mutationFn: (values: Record<string, string | string[]>) =>
       collection === 'people'
         ? api('/people', personSchema, {
             method: 'POST',
@@ -66,6 +66,22 @@ export function useCreateRecord(collection: 'people' | 'cases') {
           }),
     onSuccess: async () => {
       await client.invalidateQueries({ queryKey: [collection] });
+    },
+  });
+}
+
+export function useUpdateCasePeople(id: string) {
+  const api = useApi();
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: (personIds: string[]) =>
+      api(`/cases/${id}/people`, caseSchema, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ personIds }),
+      }),
+    onSuccess: async () => {
+      await client.invalidateQueries({ queryKey: ['cases'] });
     },
   });
 }

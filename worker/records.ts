@@ -4,7 +4,13 @@ import { HTTPException } from 'hono/http-exception';
 import { bodyLimit } from 'hono/body-limit';
 import { z } from 'zod';
 import { permissions, readableAudiences } from '../shared/documents';
-import { caseInputSchema, caseSchema, personInputSchema, personSchema } from '../shared/records';
+import {
+  casePeople,
+  caseInputSchema,
+  caseSchema,
+  personInputSchema,
+  personSchema,
+} from '../shared/records';
 import { storageLimits } from '../shared/limits';
 import { readCase, readPerson } from './record-store';
 import { requirePermission } from './authorization';
@@ -65,7 +71,7 @@ records.get('/cases', async (context) => {
     page.objects.map(async (object) => {
       try {
         const record = await readCase(context.env.DOCUMENTS, object.key.slice(6, -5), grants);
-        return !personId || record.personId === personId ? record : undefined;
+        return !personId || casePeople(record).includes(personId) ? record : undefined;
       } catch (error) {
         if (error instanceof HTTPException && error.status === 404) return;
         throw error;
@@ -103,8 +109,9 @@ records.on(
     const input = schema.safeParse(await context.req.json());
     if (!input.success) return context.json({ error: 'Check the form fields.' }, 400);
     const identity = context.get('identity');
-    if ('personId' in input.data)
-      await readPerson(context.env.DOCUMENTS, input.data.personId, identity.permissions);
+    if ('personIds' in input.data)
+      for (const id of casePeople(input.data))
+        await readPerson(context.env.DOCUMENTS, id, identity.permissions);
     const audience = readableAudiences(identity.permissions).at(-1);
     if (!audience) return context.json({ error: 'Read permission required.' }, 403);
     const value = {
@@ -129,5 +136,35 @@ records.on(
       record.id,
     ]);
     return context.json(record, 201);
+  },
+);
+
+records.put(
+  '/cases/:id/people',
+  requirePermission(permissions.create, 'Creation permission required.'),
+  bodyLimit({ maxSize: 4096 }),
+  async (context) => {
+    const grants = context.get('identity').permissions;
+    const id = context.req.param('id');
+    const record = await readCase(context.env.DOCUMENTS, id, grants);
+    const input = z
+      .strictObject({ personIds: z.array(z.uuid()).max(50) })
+      .safeParse(await context.req.json());
+    if (!input.success) return context.json({ error: 'Select valid people.' }, 400);
+    for (const personId of input.data.personIds)
+      await readPerson(context.env.DOCUMENTS, personId, grants);
+    const object = await context.env.DOCUMENTS.get(`cases/${id}.json`);
+    if (!object) return context.notFound();
+    const stored = caseSchema.parse(await object.json());
+    const { personId: _personId, ...rest } = stored;
+    const updated = { ...rest, personIds: [...new Set(input.data.personIds)] };
+    const result = await context.env.DOCUMENTS.put(`cases/${id}.json`, JSON.stringify(updated), {
+      onlyIf: { etagMatches: object.etag },
+      httpMetadata: { contentType: 'application/json' },
+    });
+    if (!result) return context.json({ error: 'Case changed. Refresh and retry.' }, 409);
+    context.set('accessedCaseIds', [id]);
+    context.set('accessedPersonIds', updated.personIds);
+    return context.json({ ...updated, audience: record.audience });
   },
 );

@@ -1,22 +1,15 @@
 import { DocumentRelationships } from '@/components/document-relationships';
-import { CalendarDays, FileText } from 'lucide-react';
+import { CalendarDays } from 'lucide-react';
 import { useParams } from 'react-router-dom';
 import { audienceLabels } from '@/lib/onboarding-fields';
 import { DocumentFields } from '@/components/document-fields';
 import { useDocument } from '@/hooks/use-documents';
 import { Failure, Loading } from '@/components/feedback';
-import { PdfDownload } from '@/components/pdf-download';
+import { DocumentAttachments } from '@/components/document-attachments';
 import { Badge } from '@/components/ui/badge';
 import { PageBreadcrumb } from '@/components/page-breadcrumb';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Item, ItemContent, ItemDescription, ItemTitle } from '@/components/ui/item';
-import {
-  Attachment,
-  AttachmentContent,
-  AttachmentDescription,
-  AttachmentMedia,
-  AttachmentTitle,
-} from '@/components/ui/attachment';
 import { Separator } from '@/components/ui/separator';
 
 export function DocumentPage() {
@@ -93,11 +86,13 @@ export function DocumentPage() {
               </CardDescription>
               <CardTitle className="text-2xl">
                 <time dateTime={document.startDate}>
-                  {new Date(`${document.startDate}T12:00:00`).toLocaleDateString('en-GB', {
-                    day: 'numeric',
-                    month: 'long',
-                    year: 'numeric',
-                  })}
+                  {document.startDate
+                    ? new Date(`${document.startDate}T12:00:00`).toLocaleDateString('en-GB', {
+                        day: 'numeric',
+                        month: 'long',
+                        year: 'numeric',
+                      })
+                    : '—'}
                 </time>
               </CardTitle>
             </CardHeader>
@@ -125,24 +120,13 @@ export function DocumentPage() {
               </Item>
             </CardContent>
           </Card>
-          {document.pdf ? (
+          {document.pdf || document.attachments?.length ? (
             <Card>
               <CardHeader>
-                <CardTitle>Attachment</CardTitle>
+                <CardTitle>Attachments</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                <Attachment>
-                  <AttachmentMedia>
-                    <FileText />
-                  </AttachmentMedia>
-                  <AttachmentContent>
-                    <AttachmentTitle title={document.pdf.name}>{document.pdf.name}</AttachmentTitle>
-                    <AttachmentDescription>
-                      {(document.pdf.size / 1024).toFixed(0)} KiB · PDF
-                    </AttachmentDescription>
-                  </AttachmentContent>
-                </Attachment>
-                <PdfDownload id={document.id} />
+                <DocumentAttachments document={document} />
               </CardContent>
             </Card>
           ) : null}

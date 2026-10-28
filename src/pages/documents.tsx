@@ -3,7 +3,7 @@ import { FileText, Plus } from 'lucide-react';
 import { permissions } from '../../shared/documents';
 import { usePermissions } from '@/components/identity';
 import { useDocuments } from '@/hooks/use-documents';
-import { DocumentCard } from '@/components/document-card';
+import { CaseDocumentCard } from '@/components/case-document-card';
 import { Failure, Loading } from '@/components/feedback';
 import { Empty, EmptyHeader, EmptyMedia, EmptyTitle } from '@/components/ui/empty';
 import { Button } from '@/components/ui/button';
@@ -44,10 +44,10 @@ export function DocumentsPage() {
           </EmptyHeader>
         </Empty>
       ) : null}
-      <ul className="grid gap-4">
+      <ul className="grid grid-cols-[repeat(auto-fill,8rem)] justify-center gap-x-4 gap-y-6 sm:justify-start sm:gap-x-6">
         {documents.map((document) => (
           <li key={document.id}>
-            <DocumentCard document={document} />
+            <CaseDocumentCard document={document} />
           </li>
         ))}
       </ul>

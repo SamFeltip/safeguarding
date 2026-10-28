@@ -9,6 +9,7 @@ interface LoginEvent {
     };
   };
   connection?: { strategy: string; name?: string };
+  transaction?: { protocol?: string };
   authentication?: { methods?: { name: string }[] };
 }
 interface LoginApi {
@@ -29,10 +30,11 @@ export function onExecutePostLogin(event: LoginEvent, api: LoginApi) {
     api.access.deny('Use the safeguarding password or passkey sign-in.');
     return;
   }
+  const refreshing = event.transaction?.protocol === 'oauth2-refresh-token';
   const methods = event.authentication?.methods ?? [];
   const passkey = methods.some((method) => method.name === 'passkey');
   const password = methods.some((method) => method.name === 'pwd');
-  if (!passkey && !password) {
+  if (!refreshing && !passkey && !password) {
     api.access.deny('Password or passkey authentication is required.');
     return;
   }
@@ -47,8 +49,11 @@ export function onExecutePostLogin(event: LoginEvent, api: LoginApi) {
     );
     return;
   }
-  if (passkey) api.multifactor.enable('none');
-  else api.multifactor.enable('google-authenticator', { allowRememberBrowser: false });
+  // A refresh token is issued only after the primary login and its required MFA.
+  if (!refreshing) {
+    if (passkey) api.multifactor.enable('none');
+    else api.multifactor.enable('google-authenticator', { allowRememberBrowser: false });
+  }
   api.accessToken.setCustomClaim('https://safeguarding.samfelton.com/approved', true);
   api.accessToken.setCustomClaim('https://safeguarding.samfelton.com/authenticated', true);
   api.accessToken.setCustomClaim(

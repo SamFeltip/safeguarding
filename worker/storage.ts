@@ -26,6 +26,7 @@ export async function createDocument(bucket: R2Bucket, document: OnboardingDocum
     onboarding: _onboarding,
     schemaVersion: _schemaVersion,
     pdf: _pdf,
+    attachments: _attachments,
     personId,
     caseId,
     title,

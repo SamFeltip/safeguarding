@@ -1,5 +1,6 @@
 import { execFileSync } from 'node:child_process';
 import { z } from 'zod';
+import config from '../cloudflare.config.ts';
 
 function command(arguments_: string[]): unknown {
   const output = execFileSync('auth0', arguments_, {
@@ -53,8 +54,32 @@ command([
     allowed_logout_urls: ['https://safeguarding.samfelton.com', 'http://localhost:5173'],
     web_origins: ['https://safeguarding.samfelton.com', 'http://localhost:5173'],
     initiate_login_uri: 'https://safeguarding.samfelton.com',
-    grant_types: ['authorization_code'],
+    grant_types: ['authorization_code', 'refresh_token'],
+    refresh_token: {
+      rotation_type: 'rotating',
+      expiration_type: 'expiring',
+      token_lifetime: 86_400,
+      idle_token_lifetime: 28_800,
+      infinite_token_lifetime: false,
+      infinite_idle_token_lifetime: false,
+      leeway: 10,
+    },
   }),
+]);
+const resourceServers = z
+  .array(z.object({ id: z.string(), identifier: z.string(), name: z.string().optional() }))
+  .parse(command(['api', 'get', 'resource-servers']));
+const safeguardingApi = resourceServers.filter(
+  (api) => api.identifier === config.worker.env.AUTH0_AUDIENCE.value,
+);
+if (safeguardingApi.length !== 1)
+  throw new Error('Expected exactly one safeguarding API to configure offline access.');
+command([
+  'api',
+  'patch',
+  `resource-servers/${safeguardingApi[0]?.id ?? ''}`,
+  '--data',
+  JSON.stringify({ allow_offline_access: true }),
 ]);
 for (const factor of ['otp', 'recovery-code'])
   command(['guardian', 'factors', 'set', factor, '--enabled']);

@@ -38,8 +38,12 @@ The Action emits the signed `authentication-policy` claim
 `database-password-mfa-or-passkey-v1`. The resource API requires that policy,
 administrator approval, authenticated status and a database `sub`, in addition
 to RS256, issuer, audience, expiry and application permissions. It accepts only
-bearer tokens. The SDK keeps tokens in memory; the application does not store them
-in localStorage or issue its own authentication/session cookies.
+bearer tokens. The Auth0 SDK persists tokens in localStorage and uses rotating refresh tokens so
+Safari can retain login across reloads without third-party cookies. Refresh exchanges
+recheck account approval and database connection and reissue the required claims
+without an interactive MFA challenge. Initial password sign-ins still require MFA.
+Refresh tokens expire after 24 hours, or 8 hours of inactivity; logging out clears
+the SDK cache. The application does not issue its own session cookies.
 
 Legacy magic-link endpoints return 410 and legacy callback URLs return to sign-in.
 Old email-session cookies and tokens cannot satisfy the new API policy. The old
@@ -81,3 +85,12 @@ References: [Auth0 invitations](https://auth0.com/docs/customize/email/send-emai
 [password change on first login](https://support.auth0.com/center/s/article/force-new-user-to-change-password-on-first-login),
 [Universal Login passkeys](https://auth0.com/docs/authenticate/database-connections/passkeys),
 [Auth0 MFA](https://auth0.com/docs/secure/multi-factor-authentication).
+
+## Safari session persistence rollout
+
+Deploy the updated Post-Login Action with `scripts/deploy-auth0-policy.ts`.
+Run `scripts/configure-auth0-login.ts` to enable the SPA refresh-token grant and
+rotation and offline access on the safeguarding API.
+Existing users need to sign in once to receive a rotating refresh token.
+
+Reference: [Auth0 session loss after refreshing a SPA](https://support.auth0.com/center/s/article/Why-is-authentication-lost-after-refreshing-my-SPA).

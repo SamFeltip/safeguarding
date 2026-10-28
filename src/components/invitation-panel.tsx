@@ -40,7 +40,7 @@ export function InvitationPanel() {
           }}
         >
           <div className="space-y-2">
-            <Label htmlFor="invite-email">Email address</Label>
+            <Label htmlFor="invite-email">Email address (required)</Label>
             <Input
               id="invite-email"
               type="email"

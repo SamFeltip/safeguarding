@@ -127,7 +127,7 @@ which is a preference, not a residency guarantee. Strict mode remains the defaul
   immutability, not a storage retention lock.
 - Private PDF downloads pass through authenticated API checks and use attachment
   disposition, `nosniff`, sandbox CSP and no-store caching. Upload limits: 10 MiB
-  PDF, 16 KiB form JSON, 11 MiB total request. Signature/MIME/EOF checks are not
+  per PDF/image, 10 attachments and 50 MiB combined, 16 KiB form JSON, 51 MiB total request. Signature/MIME/EOF checks are not
   malware scanning. Interrupted submissions can leave unreachable private PDFs.
 - Every document list/detail/PDF request and backup request records timestamp,
   Auth0 subject, permissions, document IDs, action, HTTP method/path/status, request
@@ -179,13 +179,13 @@ boundaries and maintenance guidelines.
 ## People and cases
 
 People are standalone R2 records, separate from Auth0 accounts. Create them under
-**People**, then create cases for a person. **Cases** lists accessible cases;
+**People** without needing an email address. Cases can have zero or multiple people. **Cases** lists accessible cases;
 `/people/:id` shows that person's cases and documents, while `/cases/:id` lists
 its documents. Both pages provide **New document** with the relevant IDs selected
 and available person details filled in. The main document form also lets you
-select or create a person and case. Every new document must belong to exactly one case; its person is derived from
-that case and validated by the API. Existing records without a case remain readable
-without rewriting submitted content.
+select or create a person and case. All document fields and person/case links are optional. A selected person must be
+attached to the selected case. Single-person cases provide the default person link.
+Case people can be added or removed on the case page; submitted document links remain saved.
 
 Person details provide defaults, not a live link to submitted field values.
 Documents keep their submitted snapshots. The API validates record IDs, access
@@ -198,6 +198,6 @@ most restricted readable audience. Person/case reads, creation and policy change
 are audited. `people/`, `cases/` and their `access/` policies are included in the
 existing compressed, encrypted backups and offline restoration.
 
-Case document lists use responsive grids of shadcn cards at the A4 portrait ratio
+The main document list and case document lists use the same responsive grids of shadcn cards at the A4 portrait ratio
 (210:297). They show hierarchical document summaries, not PDF page thumbnails;
 opening a card loads the complete authorized document.

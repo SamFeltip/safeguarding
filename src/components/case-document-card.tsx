@@ -23,7 +23,7 @@ export function CaseDocumentCard({ document }: { document: DocumentSummary }) {
               Onboarding
             </CardDescription>
             <CardTitle className="line-clamp-2 break-words text-[9px] leading-tight">
-              {document.fullName}
+              {document.fullName || title}
             </CardTitle>
             <CardDescription className="line-clamp-2 break-words text-[6px] leading-snug">
               {document.jobTitle}

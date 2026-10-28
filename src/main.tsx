@@ -28,7 +28,9 @@ createRoot(rootElement).render(
           redirect_uri: globalThis.location.origin,
           scope: 'openid profile email',
         }}
-        cacheLocation="memory"
+        cacheLocation="localstorage"
+        useRefreshTokens
+        useRefreshTokensFallback
         onRedirectCallback={(state) => {
           const path = returnState.safeParse(state);
           const returnTo = path.success ? path.data.returnTo : '/';

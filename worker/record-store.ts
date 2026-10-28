@@ -1,7 +1,7 @@
 import { HTTPException } from 'hono/http-exception';
 import { z } from 'zod';
 import { canRead } from '../shared/documents';
-import { caseSchema, personSchema } from '../shared/records';
+import { casePeople, caseSchema, personSchema } from '../shared/records';
 import { documentAudience } from './document-access';
 import type { DocumentLinks } from '../shared/records';
 
@@ -23,7 +23,7 @@ export async function readCase(bucket: R2Bucket, id: string, grants: readonly st
   const record = caseSchema.parse(await object.json());
   const audience = await documentAudience(bucket, `cases/${id}`, record.audience);
   if (!canRead(grants, audience)) throw new HTTPException(404, { message: 'Case not found.' });
-  await readPerson(bucket, record.personId, grants);
+  for (const id of casePeople(record)) await readPerson(bucket, id, grants);
   return { ...record, audience };
 }
 
@@ -31,12 +31,20 @@ export async function resolveDocumentLinks(
   bucket: R2Bucket,
   links: DocumentLinks,
   grants: readonly string[],
+  validateMembership = false,
 ): Promise<DocumentLinks> {
   const record = links.caseId ? await readCase(bucket, links.caseId, grants) : undefined;
-  if (record && links.personId && record.personId !== links.personId) {
+  if (
+    validateMembership &&
+    record &&
+    links.personId &&
+    !casePeople(record).includes(links.personId)
+  ) {
     throw new HTTPException(400, { message: 'The case belongs to a different person.' });
   }
-  const personId = record?.personId ?? links.personId;
+  const personId =
+    links.personId ??
+    (record && casePeople(record).length === 1 ? casePeople(record)[0] : undefined);
   if (personId) await readPerson(bucket, personId, grants);
   return { ...(personId ? { personId } : {}), ...(record ? { caseId: record.id } : {}) };
 }

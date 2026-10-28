@@ -21,7 +21,6 @@ export function OnboardingFields({
         id={name}
         name={name}
         type={type}
-        required
         defaultValue={defaults?.[name]}
         maxLength={name === 'email' ? uploadLimits.email : uploadLimits.shortText}
       />

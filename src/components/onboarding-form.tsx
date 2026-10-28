@@ -17,7 +17,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Link } from 'react-router-dom';
 import { employmentTypes, generateDocumentTitle } from '../../shared/documents';
 import type { Audience } from '../../shared/documents';
-import { pdfSizeLabel, uploadLimits } from '../../shared/limits';
+import { AttachmentUpload } from './attachment-upload';
+import { uploadLimits } from '../../shared/limits';
 
 interface OnboardingFormProperties {
   allowed: Audience[];
@@ -46,6 +47,7 @@ export function OnboardingForm({
       }}
     >
       <FieldGroup>
+        <p className="text-sm text-muted-foreground">All fields are optional.</p>
         {links?.personId ? <input type="hidden" name="personId" value={links.personId} /> : null}
         {links?.caseId ? <input type="hidden" name="caseId" value={links.caseId} /> : null}
         <input type="hidden" name="audience" value={allowed.at(-1)} />
@@ -71,14 +73,9 @@ export function OnboardingForm({
             <OnboardingFields section="work" defaults={defaults} />
             <Field>
               <FieldLabel htmlFor="employmentType">Employment type</FieldLabel>
-              <Select
-                name="employmentType"
-                defaultValue={employmentTypes[0]}
-                required
-                disabled={pending}
-              >
+              <Select name="employmentType" defaultValue="" disabled={pending}>
                 <SelectTrigger id="employmentType" className="w-full">
-                  <SelectValue />
+                  <SelectValue placeholder="Select employment type" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectGroup>
@@ -105,15 +102,14 @@ export function OnboardingForm({
               <Textarea id="notes" name="notes" maxLength={uploadLimits.notes} />
             </Field>
             <Field>
-              <FieldLabel htmlFor="pdf">Supporting PDF (optional, up to {pdfSizeLabel})</FieldLabel>
-              <Input id="pdf" name="pdf" type="file" accept="application/pdf,.pdf" />
+              <AttachmentUpload />
             </Field>
           </FieldGroup>
         </FieldSet>
 
         {error ? <Failure error={error} /> : null}
         <Field orientation="horizontal">
-          <Button type="submit" disabled={pending || !links?.caseId}>
+          <Button type="submit" disabled={pending}>
             {pending ? 'Uploading…' : 'Submit document'}
           </Button>
           <Button asChild variant="outline">

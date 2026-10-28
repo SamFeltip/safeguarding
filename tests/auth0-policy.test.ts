@@ -113,6 +113,25 @@ describe('hosted database password MFA or passkey policy', () => {
       expect(api.access.deny).toHaveBeenCalledOnce();
     }
   });
+  it('renews an approved session without an interactive MFA challenge', () => {
+    const api = apiFixture();
+    onExecutePostLogin({ ...login(''), transaction: { protocol: 'oauth2-refresh-token' } }, api);
+    expect(api.access.deny).not.toHaveBeenCalled();
+    expect(api.multifactor.enable).not.toHaveBeenCalled();
+    expect(api.accessToken.setCustomClaim).toHaveBeenCalledWith(
+      'https://safeguarding.samfelton.com/authenticated',
+      true,
+    );
+  });
+  it('still denies renewal after approval is removed', () => {
+    const api = apiFixture();
+    onExecutePostLogin(
+      { ...login(''), user: {}, transaction: { protocol: 'oauth2-refresh-token' } },
+      api,
+    );
+    expect(api.access.deny).toHaveBeenCalledOnce();
+    expect(api.accessToken.setCustomClaim).not.toHaveBeenCalled();
+  });
   it('leaves unrelated applications alone', () => {
     const api = apiFixture();
     onExecutePostLogin({ ...login('pwd'), client: { client_id: 'unrelated' } }, api);

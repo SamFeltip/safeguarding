@@ -1,7 +1,9 @@
 const mebibyte = 1024 * 1024;
 export const uploadLimits = {
   pdfBytes: 10 * mebibyte,
-  requestBytes: 11 * mebibyte,
+  requestBytes: 51 * mebibyte,
+  attachmentCount: 10,
+  totalAttachmentBytes: 50 * mebibyte,
   formCharacters: 16 * 1024,
   shortText: 120,
   email: 254,

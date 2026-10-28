@@ -22,12 +22,12 @@ export function DocumentContextPicker({
       <CardContent>
         <FieldGroup className="grid grid-cols-1 gap-6 sm:grid-cols-2">
           <Field>
-            <FieldTitle>Person</FieldTitle>
+            <FieldTitle>Person (optional)</FieldTitle>
             <PersonSelect value={personId} onChange={onPerson} />
             <RecordCreateDialog collection="people" onCreated={onPerson} />
           </Field>
           <Field>
-            <FieldTitle>Case (required)</FieldTitle>
+            <FieldTitle>Case (optional)</FieldTitle>
             <CaseSelect personId={personId} value={caseId} onChange={onCase} />
             <RecordCreateDialog collection="cases" personId={personId} onCreated={onCase} />
           </Field>

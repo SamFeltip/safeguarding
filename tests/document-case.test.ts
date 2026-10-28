@@ -48,22 +48,38 @@ async function upload(caseIds: string[], title?: string) {
   });
 }
 
-describe('exactly one immutable case per new document', () => {
+describe('optional immutable case per new document', () => {
   it('generates a title when the submitted title contains only whitespace', async () => {
     const response = await upload([caseId], '   ');
     expect(response.status).toBe(201);
     const saved = documentSchema.parse(await response.json());
     expect(saved.title).toBe(generateDocumentTitle(new Date(saved.createdAt)));
   });
-  it('rejects missing, duplicate, multiple and array-valued case selections', async () => {
+  it('rejects duplicate, multiple and array-valued case selections', async () => {
     for (const ids of [
-      [],
       [caseId, caseId],
       [caseId, otherCaseId],
       [JSON.stringify([caseId, otherCaseId])],
     ]) {
       expect((await upload(ids)).status).toBe(400);
     }
+  });
+  it('creates a document without a case or any entered fields', async () => {
+    const form = new FormData();
+    form.set('onboarding', '{}');
+    const source = new Request('http://test/documents', { method: 'POST', body: form });
+    const response = await emulator.dispatchFetch(source.url, {
+      method: 'POST',
+      headers: [
+        ...source.headers.entries(),
+        ['X-Test-Permissions', `${permissions.company},${permissions.create}`],
+      ],
+      body: new Uint8Array(await source.arrayBuffer()),
+    });
+    expect(response.status).toBe(201);
+    const document = documentSchema.parse(await response.json());
+    expect(document.caseId).toBeUndefined();
+    expect(document.fullName).toBe('');
   });
   it('saves a single case and never lists that document in another case', async () => {
     const response = await upload([caseId]);

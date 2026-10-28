@@ -1,6 +1,6 @@
 import { uploadLimits } from '../../shared/limits';
 import { z } from 'zod';
-import { PersonSelect } from './record-select';
+import { PeoplePicker } from './people-picker';
 import { useState } from 'react';
 import { Plus } from 'lucide-react';
 import { useCreateRecord } from '@/hooks/use-records';
@@ -27,8 +27,7 @@ export function RecordCreateDialog({
   onCreated?: (id: string) => void;
 }) {
   const [open, setOpen] = useState(false);
-  const [selectedPerson, setSelectedPerson] = useState<string>();
-  const linkedPerson = personId ?? selectedPerson;
+  const [selectedPeople, setSelectedPeople] = useState<string[]>(personId ? [personId] : []);
   const create = useCreateRecord(collection);
   const isPerson = collection === 'people';
   const label = isPerson ? 'New person' : 'New case';
@@ -53,7 +52,11 @@ export function RecordCreateDialog({
       <DialogContent className="max-h-[calc(100dvh-2rem)] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{label}</DialogTitle>
-          <DialogDescription>{isPerson ? 'Person record' : 'Case details'}</DialogDescription>
+          <DialogDescription>
+            {isPerson
+              ? 'Person record. Fields marked (required) must be completed.'
+              : 'Case details. Only the case title is required.'}
+          </DialogDescription>
         </DialogHeader>
         <form
           onSubmit={(event) => {
@@ -62,7 +65,7 @@ export function RecordCreateDialog({
               .record(z.string(), z.string())
               .parse(Object.fromEntries(new FormData(event.currentTarget).entries()));
             create.mutate(
-              { ...values, ...(!isPerson && linkedPerson ? { personId: linkedPerson } : {}) },
+              { ...values, ...(isPerson ? {} : { personIds: selectedPeople }) },
               {
                 onSuccess: (record) => {
                   onCreated?.(record.id);
@@ -73,27 +76,30 @@ export function RecordCreateDialog({
           }}
         >
           <FieldGroup>
-            {!isPerson && !personId ? (
+            {isPerson ? null : (
               <Field>
-                <FieldLabel>Person</FieldLabel>
-                <PersonSelect value={selectedPerson} onChange={setSelectedPerson} />
+                <FieldLabel>People (optional)</FieldLabel>
+                <PeoplePicker values={selectedPeople} onChange={setSelectedPeople} />
               </Field>
-            ) : null}
+            )}
             {fields.map(([name, label]) => (
               <Field key={name}>
-                <FieldLabel htmlFor={`new-${name}`}>{label}</FieldLabel>
+                <FieldLabel htmlFor={`new-${name}`}>
+                  {label}
+                  {name === 'fullName' || name === 'title' ? ' (required)' : ' (optional)'}
+                </FieldLabel>
                 <Input
                   id={`new-${name}`}
                   name={name}
                   type={name === 'email' ? 'email' : 'text'}
-                  required={name === 'fullName' || name === 'email' || name === 'title'}
+                  required={name === 'fullName' || name === 'title'}
                   maxLength={name === 'email' ? uploadLimits.email : uploadLimits.shortText}
                   disabled={create.isPending}
                 />
               </Field>
             ))}
             {create.error ? <Failure error={create.error} /> : null}
-            <Button type="submit" disabled={create.isPending || (!isPerson && !linkedPerson)}>
+            <Button type="submit" disabled={create.isPending}>
               {create.isPending ? 'Creating…' : 'Create'}
             </Button>
           </FieldGroup>

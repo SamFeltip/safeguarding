@@ -78,8 +78,8 @@ documents.post(
         400,
       );
     }
-    if (form.getAll('caseId').length !== 1 || form.getAll('personId').length > 1) {
-      return context.json({ error: 'Select exactly one case for this document.' }, 400);
+    if (form.getAll('caseId').length > 1 || form.getAll('personId').length > 1) {
+      return context.json({ error: 'Select at most one case for this document.' }, 400);
     }
     const links = newDocumentLinksSchema.safeParse({
       personId: form.get('personId') ?? undefined,
@@ -90,6 +90,7 @@ documents.post(
       onboarding: result.data,
       links: links.data,
       attachment: form.get('pdf'),
+      attachments: form.getAll('attachments'),
       identity: context.get('identity'),
     });
     context.set('accessedDocumentIds', [document.id]);
@@ -109,6 +110,25 @@ documents.get('/:id/pdf', requireReadableDocument, async (context) => {
     headers: {
       'Content-Type': 'application/pdf',
       'Content-Disposition': `attachment; filename="onboarding-${document.id}.pdf"`,
+      'Content-Security-Policy': "sandbox; default-src 'none'",
+      'X-Content-Type-Options': 'nosniff',
+      'Cache-Control': 'private, no-store',
+    },
+  });
+});
+
+documents.get('/:id/attachments/:index', requireReadableDocument, async (context) => {
+  const document = context.get('document');
+  const index = context.req.param('index');
+  if (!/^(0|[1-9]\d*)$/u.test(index)) return context.notFound();
+  const attachment = document.attachments?.[Number(index)];
+  if (!attachment) return context.notFound();
+  const object = await context.env.DOCUMENTS.get(attachment.key);
+  if (!object) return context.notFound();
+  return new Response(object.body, {
+    headers: {
+      'Content-Type': attachment.contentType,
+      'Content-Disposition': `inline; filename*=UTF-8''${encodeURIComponent(attachment.name)}`,
       'Content-Security-Policy': "sandbox; default-src 'none'",
       'X-Content-Type-Options': 'nosniff',
       'Cache-Control': 'private, no-store',

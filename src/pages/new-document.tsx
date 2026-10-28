@@ -1,3 +1,4 @@
+import { casePeople } from '../../shared/records';
 import { useSearchParams } from 'react-router-dom';
 import { permissions, readableAudiences } from '../../shared/documents';
 import { usePermissions } from '@/components/identity';
@@ -13,7 +14,7 @@ export function NewDocumentPage() {
   const [query, setQuery] = useSearchParams();
   const caseId = query.get('caseId') ?? undefined;
   const selectedCase = useCase(caseId);
-  const personId = query.get('personId') ?? selectedCase.data?.personId;
+  const personId = query.get('personId') ?? undefined;
   const person = usePerson(personId);
   const grants = usePermissions();
   const upload = useCreateDocument();
@@ -24,7 +25,7 @@ export function NewDocumentPage() {
   if ((caseId && selectedCase.isPending) || (personId && person.isPending)) return <Loading />;
   const error = selectedCase.error ?? person.error;
   if (error) return <Failure error={error} />;
-  if (selectedCase.data && personId !== selectedCase.data.personId) {
+  if (selectedCase.data && personId && !casePeople(selectedCase.data).includes(personId)) {
     return <Failure error={new Error('The case belongs to a different person.')} />;
   }
   const links = { ...(personId ? { personId } : {}), ...(caseId ? { caseId } : {}) };
