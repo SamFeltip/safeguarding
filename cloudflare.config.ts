@@ -13,6 +13,7 @@ export default defineConfig({
     compatibilityFlags: ['nodejs_compat'],
     workersDev: false,
     previewUrls: false,
+    placement: { region: 'aws:eu-west-2' },
     domains: variables.CLOUDFLARE_APP_HOSTNAME
       ? [{ hostname: variables.CLOUDFLARE_APP_HOSTNAME, production: true, previews: false }]
       : [],
@@ -21,6 +22,8 @@ export default defineConfig({
       runWorkerFirst: ['/api/*'],
     },
     env: {
+      AUTH0_SERVICE_CLIENT_ID: bindings.secret(),
+      AUTH0_SERVICE_CLIENT_SECRET: bindings.secret(),
       DOCUMENTS: bindings.r2({ name: 'safeguarding-documents', jurisdiction: dataJurisdiction }),
       BACKUPS: bindings.r2({ name: 'safeguarding-backups', jurisdiction: dataJurisdiction }),
       BACKUP_ENCRYPTION_KEY: bindings.secret(),
@@ -40,7 +43,13 @@ export default defineConfig({
     },
     observability: {
       enabled: true,
-      traces: { enabled: true, headSamplingRate: 0.1 },
+      redactQueryString: true,
+      logs: { enabled: true, persist: variables.CLOUDFLARE_RESIDENCY_MODE !== 'best-effort' },
+      traces: {
+        enabled: true,
+        headSamplingRate: 0.1,
+        persist: variables.CLOUDFLARE_RESIDENCY_MODE !== 'best-effort',
+      },
     },
   },
 });

@@ -10,3 +10,6 @@ export const identitySchema = z.object({
   permissions: z.array(z.string()),
 });
 export type Identity = z.infer<typeof identitySchema>;
+
+export const databaseConnection = 'safeguarding-members';
+export const authenticationPolicy = 'database-password-mfa-or-passkey-v1';

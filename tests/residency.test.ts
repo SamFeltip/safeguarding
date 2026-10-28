@@ -32,6 +32,19 @@ function validAccount() {
 }
 
 describe('EU deployment safeguards', () => {
+  it('requires an explicit best-effort mode to deploy without Enterprise regionalization', async () => {
+    const warning = vi.spyOn(console, 'warn').mockImplementation(() => {
+      // Suppress the expected deployment warning in test output.
+    });
+    await verifyCloudflareResidency({ ...variables, CLOUDFLARE_RESIDENCY_MODE: 'best-effort' });
+    expect(request).not.toHaveBeenCalled();
+    expect(run).not.toHaveBeenCalled();
+    expect(warning).toHaveBeenCalledWith(expect.stringContaining('EU storage only'));
+    warning.mockRestore();
+    await expect(
+      verifyCloudflareResidency({ ...variables, CLOUDFLARE_RESIDENCY_MODE: 'invalid' }),
+    ).rejects.toThrow();
+  });
   it('restricts storage and backup execution and disables unregionalized hostnames', () => {
     expect(config.worker.env.DOCUMENTS.jurisdiction).toBe('eu');
     expect(config.worker.env.BACKUPS.jurisdiction).toBe('eu');

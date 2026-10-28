@@ -1,6 +1,15 @@
 # EU data residency and encryption
 
 The project configuration restricts application storage to the European Union.
+The Auth0 canonical domain may be in either the EU (`*.eu.auth0.com`) or UK
+(`*.uk.auth0.com`); the safeguarding tenant is in the UK.
+The default strict deployment requires Enterprise Regional Services and an EU
+Customer Metadata Boundary. On accounts without these features, explicitly setting
+`CLOUDFLARE_RESIDENCY_MODE=best-effort` skips only those Enterprise checks and warns
+that execution, TLS termination and metadata are not region-restricted. EU R2 and
+Workflow jurisdiction/privacy checks remain mandatory. Best-effort mode disables
+persisted Cloudflare observability logs and traces; detailed application audits stay
+in EU R2. London placement is configured as a performance preference only.
 This is a deployment requirement, not a claim that a live account has been configured.
 Run `npm run security:residency` against the deployed account to verify the remote
 bucket jurisdictions, bucket privacy, Workflow jurisdiction, Regional Services
@@ -15,7 +24,7 @@ hostname and Customer Metadata Boundary.
 | Backup job execution, parameters and step state                          | Backup Workflow export with `jurisdiction: eu`                                     |
 | Web requests and API execution                                           | EU Regional Services on the application custom hostname                            |
 | Cloudflare customer traffic metadata                                     | Account Customer Metadata Boundary set to `eu`, with out-of-region access disabled |
-| Authentication                                                           | Deployment requires the canonical `*.eu.auth0.com` tenant domain                   |
+| Authentication                                                           | Deployment requires a canonical `*.eu.auth0.com` or `*.uk.auth0.com` tenant domain |
 
 R2 encrypts all object contents and metadata at rest automatically with AES-256
 using Cloudflare-managed keys. There is no R2 switch to enable this: it is always

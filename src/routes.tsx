@@ -19,6 +19,10 @@ const AdminPage = lazy(async () => {
   const page = await import('@/pages/admin');
   return { default: page.AdminPage };
 });
+const AccountPage = lazy(async () => {
+  const page = await import('@/pages/account');
+  return { default: page.AccountPage };
+});
 
 const PeoplePage = lazy(async () => {
   const page = await import('@/pages/people');
@@ -47,6 +51,7 @@ export function AppRoutes() {
         <Route path="/cases" element={<CasesPage />} />
         <Route path="/cases/:id" element={<CasePage />} />
         <Route path="/admin" element={<AdminPage />} />
+        <Route path="/account" element={<AccountPage />} />
         <Route path="/documents/new" element={<NewDocumentPage />} />
         <Route path="/documents/:id" element={<DocumentPage />} />
         <Route path="*" element={<Failure error={new Error('Page not found.')} />} />

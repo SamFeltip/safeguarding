@@ -1,4 +1,4 @@
-import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdtempSync, rmSync, writeFileSync, readFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { z } from 'zod';
@@ -27,7 +27,24 @@ async function deploy() {
   const directory = mkdtempSync(path.join(tmpdir(), 'safeguarding-deploy-'));
   try {
     const secretsPath = path.join(directory, 'secrets.json');
-    writeFileSync(secretsPath, JSON.stringify({ BACKUP_ENCRYPTION_KEY: secret }), { mode: 0o600 });
+    const authenticationSecrets = z
+      .object({
+        AUTH0_SERVICE_CLIENT_ID: z.string().min(1),
+        AUTH0_SERVICE_CLIENT_SECRET: z.string().min(1),
+      })
+      .parse(
+        JSON.parse(
+          readFileSync(variables.AUTH0_SERVICE_SECRETS_FILE || '.auth0-service.local', 'utf8'),
+        ),
+      );
+    writeFileSync(
+      secretsPath,
+      JSON.stringify({
+        BACKUP_ENCRYPTION_KEY: secret,
+        ...authenticationSecrets,
+      }),
+      { mode: 0o600 },
+    );
     run(['deploy', '--secrets-file', secretsPath]);
     assertEuWorkflow(config.worker.exports.BackupWorkflow.name);
   } finally {

@@ -42,18 +42,31 @@ mock identity. Local state is separate from production.
 
 4. Enable **New Universal Login**, **Identifier First**, and **Passkeys** on the
    Auth0-hosted database connection used by this SPA. Complete the prerequisites
-   shown by Auth0, including domain configuration. Optional company/social OAuth
-   connections can also be enabled. Passkeys are enrolled/used on Auth0's hosted UI.
+   shown by Auth0, including domain configuration. Disable social/enterprise connections
+   for this SPA and disable public database signups. Passkeys are enrolled/used on Auth0's UI.
 5. Fill in `VITE_AUTH0_DOMAIN`, `VITE_AUTH0_CLIENT_ID`, `VITE_AUTH0_AUDIENCE`,
    `AUTH0_DOMAIN`, and `AUTH0_AUDIENCE` in `.env.local`. Browser/Worker domain and
    audience must match. Domains are hostnames without scheme or trailing slash.
 
-Auth0 tenant administrators assign roles; an app admin does not gain Auth0 tenant
-administration rights. Users without permissions cannot create or read documents.
-Restrict company enrollment through Auth0; never allow public signups to choose
-roles. The API checks RS256 signature, issuer, audience, expiry and permissions
-from the access token. Tokens stay in browser memory. Role changes take effect
-with a fresh token, subject to your configured access-token lifetime.
+App administrators invite accounts under **Admin settings → Accounts**, choosing
+permissions before sending Auth0's standard password-setup email. The database
+connection has public signup disabled. Users set their own password, sign in and
+enroll an authenticator app; Universal Login also offers progressive passkey enrollment.
+Subsequent sign-ins use a password plus an authenticator code, or a passkey.
+
+The Post-Login Action requires administrative approval, the dedicated database
+connection, and completed password setup for password users. It requires Auth0's
+TOTP challenge before issuing tokens for a password login; passkeys do not need
+an additional code. The API verifies the new signed authentication-policy claim,
+RS256 signature, issuer, audience, expiry and permissions. Old magic-link tokens
+and cookies cannot access the application.
+
+Deploy the Action using `node --experimental-strip-types scripts/deploy-auth0-policy.ts`.
+Configure hosted login with `scripts/configure-auth0-login.ts`. Account migration
+preserves permissions and canonical record ownership without linking identities.
+Tokens stay in the React SDK's memory cache. Domain records, PDFs, policies,
+audits and encrypted backups remain in private EU R2. See
+[authentication setup](docs/authentication.md).
 
 [Auth0 React SDK](https://auth0.com/docs/libraries/auth0-react),
 [API RBAC](https://auth0.com/docs/get-started/apis/enable-role-based-access-control-for-apis),
@@ -67,7 +80,7 @@ npm run deploy
 ```
 
 Before the first deploy, complete the [EU residency setup](docs/data-residency.md):
-provide the account/zone IDs and application custom hostname, use an EU Auth0
+provide the account/zone IDs and application custom hostname, use an EU/UK Auth0
 tenant, and enable the account's EU Customer Metadata Boundary. The scoped API
 token needs Logs Read and Regional Services permissions as well as deployment access.
 
@@ -92,6 +105,13 @@ bundled at build time; domain/audience are Worker text bindings. The generated
 backup key is uploaded as a secret and never enters the browser bundle. CI also
 needs scoped `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` values. Keep an offline
 copy of `.backup-keys/production.key` before relying on backups.
+
+For accounts without Enterprise Data Localization, an explicit
+`CLOUDFLARE_RESIDENCY_MODE=best-effort` permits deployment with EU R2 and Workflow
+jurisdictions while skipping unavailable Regional Services/metadata-boundary checks.
+It emits a warning, disables persisted Cloudflare logs/traces, and retains detailed
+audit records in private EU R2. Worker placement targets London (`aws:eu-west-2`),
+which is a preference, not a residency guarantee. Strict mode remains the default.
 
 ## Data and audit logs
 

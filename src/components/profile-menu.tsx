@@ -1,7 +1,7 @@
-import { useAuth0 } from '@auth0/auth0-react';
+import { useAppAuth } from '@/hooks/use-app-auth';
 import { useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
-import { LogOut, Settings } from 'lucide-react';
+import { LogOut, Settings, KeyRound } from 'lucide-react';
 import { permissions } from '../../shared/documents';
 import { usePermissions } from './identity';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
@@ -16,7 +16,7 @@ import {
 } from './ui/dropdown-menu';
 
 export function ProfileMenu() {
-  const { user, logout } = useAuth0();
+  const { user, signOut } = useAppAuth();
   const grants = usePermissions();
   const client = useQueryClient();
   const name = user?.name ?? user?.email ?? 'Profile';
@@ -33,6 +33,11 @@ export function ProfileMenu() {
       <DropdownMenuContent align="end" className="w-56">
         <DropdownMenuLabel className="break-words">{name}</DropdownMenuLabel>
         <DropdownMenuSeparator />
+        <DropdownMenuItem asChild>
+          <Link to="/account">
+            <KeyRound /> Sign-in methods
+          </Link>
+        </DropdownMenuItem>
         {grants.includes(permissions.admin) ? (
           <DropdownMenuItem asChild>
             <Link to="/admin">
@@ -44,7 +49,7 @@ export function ProfileMenu() {
         <DropdownMenuItem
           onSelect={() => {
             client.clear();
-            void logout({ logoutParams: { returnTo: globalThis.location.origin } });
+            void signOut();
           }}
         >
           <LogOut />

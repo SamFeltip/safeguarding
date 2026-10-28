@@ -1,8 +1,10 @@
 import { createContext, useContext } from 'react';
+import { useAppAuth } from '@/hooks/use-app-auth';
 import { useQuery } from '@tanstack/react-query';
 import { useApi } from '@/lib/api';
 import { identitySchema } from '../../shared/auth';
 import { Failure, Loading } from './feedback';
+import { Button } from './ui/button';
 import type { ReactNode } from 'react';
 
 const IdentityContext = createContext<string[] | undefined>(undefined);
@@ -13,6 +15,7 @@ export function usePermissions() {
 }
 
 export function IdentityProvider({ children }: { children: ReactNode }) {
+  const { signOut } = useAppAuth();
   const api = useApi();
   const identity = useQuery({
     queryKey: ['identity'],
@@ -22,12 +25,25 @@ export function IdentityProvider({ children }: { children: ReactNode }) {
   if (identity.isPending) return <Loading />;
   if (identity.isError) {
     return (
-      <Failure
-        error={identity.error}
-        retry={() => {
-          void identity.refetch();
-        }}
-      />
+      <div className="mx-auto max-w-xl space-y-4 p-6">
+        <Failure
+          error={identity.error}
+          retry={() => {
+            void identity.refetch();
+          }}
+        />
+        <p>
+          Access requires an administrator-approved account. Use your password and authenticator
+          code, or a registered passkey to continue.
+        </p>
+        <Button
+          onClick={() => {
+            void signOut();
+          }}
+        >
+          Sign out
+        </Button>
+      </div>
     );
   }
   return (

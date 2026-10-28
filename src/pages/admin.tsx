@@ -7,6 +7,7 @@ import { BackupPanel } from '@/components/backup-panel';
 import { DocumentAccessPanel } from '@/components/document-access-panel';
 import { PageBreadcrumb } from '@/components/page-breadcrumb';
 import { Badge } from '@/components/ui/badge';
+import { InvitationPanel } from '@/components/invitation-panel';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 export function AdminPage() {
@@ -23,23 +24,34 @@ export function AdminPage() {
         </Badge>
         <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">Admin settings</h1>
       </div>
-      <Tabs defaultValue="access" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-2 gap-1 group-data-[orientation=horizontal]/tabs:h-auto [&_[data-slot=tabs-trigger]]:h-10 sm:inline-flex sm:w-fit sm:[&_[data-slot=tabs-trigger]]:h-8">
+      <Tabs
+        defaultValue="access"
+        orientation="vertical"
+        className="flex-col items-stretch gap-6 lg:flex-row lg:items-start"
+      >
+        <TabsList
+          aria-label="Admin settings"
+          className="w-full shrink-0 gap-1 rounded-xl border bg-card p-2 lg:sticky lg:top-6 lg:w-52 [&_[data-slot=tabs-trigger]]:min-h-11 [&_[data-slot=tabs-trigger]]:flex-none [&_[data-slot=tabs-trigger]]:px-3 [&_[data-slot=tabs-trigger]]:data-[state=active]:bg-accent [&_[data-slot=tabs-trigger]]:data-[state=active]:text-accent-foreground"
+        >
+          <TabsTrigger value="accounts">Accounts</TabsTrigger>
           <TabsTrigger value="access">Document access</TabsTrigger>
           <TabsTrigger value="people">People access</TabsTrigger>
           <TabsTrigger value="cases">Case access</TabsTrigger>
           <TabsTrigger value="backups">Backups</TabsTrigger>
         </TabsList>
-        <TabsContent value="access">
+        <TabsContent value="accounts" className="min-w-0">
+          <InvitationPanel />
+        </TabsContent>
+        <TabsContent value="access" className="min-w-0">
           <DocumentAccessPanel />
         </TabsContent>
-        <TabsContent value="people">
+        <TabsContent value="people" className="min-w-0">
           <PeopleAccessPanel />
         </TabsContent>
-        <TabsContent value="cases">
+        <TabsContent value="cases" className="min-w-0">
           <CasesAccessPanel />
         </TabsContent>
-        <TabsContent value="backups">
+        <TabsContent value="backups" className="min-w-0">
           <BackupPanel />
         </TabsContent>
       </Tabs>

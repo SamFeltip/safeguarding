@@ -8,9 +8,9 @@ export function useAuthenticatedRequest() {
   const { getAccessTokenSilently } = useAuth0();
   return useCallback(
     async (path: string, options: RequestInit = {}) => {
+      const headers = new Headers(options.headers);
       const token = await getAccessTokenSilently();
       if (!token) throw new Error('Please sign in again.');
-      const headers = new Headers(options.headers);
       headers.set('Authorization', `Bearer ${token}`);
       const response = await fetch(`/api${path}`, { ...options, headers });
       if (!response.ok) {

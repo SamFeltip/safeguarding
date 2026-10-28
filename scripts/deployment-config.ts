@@ -12,8 +12,11 @@ export function deploymentConfiguration() {
   });
   if (!authentication.success) throw new Error('Configure Auth0 in .env.local before deploying.');
   residencyConfigurationSchema.parse(variables);
-  if (!authentication.data.domain.endsWith('.eu.auth0.com')) {
-    throw new Error('Use the canonical domain of an EU Auth0 tenant for this deployment.');
+  if (!/\.(?:eu|uk)\.auth0\.com$/u.test(authentication.data.domain)) {
+    throw new Error('Use the canonical domain of an EU or UK Auth0 tenant for this deployment.');
+  }
+  if (authentication.data.audience === `https://${authentication.data.domain}/api/v2/`) {
+    throw new Error('Use a dedicated application API audience, not the Auth0 Management API.');
   }
   if (
     authentication.data.domain !== config.worker.env.AUTH0_DOMAIN.value ||

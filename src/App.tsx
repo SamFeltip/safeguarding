@@ -1,4 +1,4 @@
-import { useAuth0 } from '@auth0/auth0-react';
+import { useAppAuth } from './hooks/use-app-auth';
 import { AppHeader } from '@/components/app-header';
 import { SignIn } from '@/components/sign-in';
 import { Failure, Loading } from '@/components/feedback';
@@ -6,7 +6,7 @@ import { IdentityProvider } from '@/components/identity';
 import { AppRoutes } from './routes';
 
 export default function App() {
-  const { isLoading, isAuthenticated, error } = useAuth0();
+  const { isLoading, isAuthenticated, error } = useAppAuth();
   if (isAuthenticated)
     return (
       <IdentityProvider>

@@ -18,6 +18,17 @@ export async function verifyCloudflareResidency(
   configureHostname = false,
 ) {
   const configuration = residencyConfigurationSchema.parse(variables);
+  const mode = z
+    .enum(['strict', 'best-effort'])
+    .default('strict')
+    .parse(variables.CLOUDFLARE_RESIDENCY_MODE);
+  if (mode === 'best-effort') {
+    console.warn(
+      'EU storage only: Regional Services and Customer Metadata Boundary are not verified. ' +
+        'Request execution, TLS termination, logs, code and secrets may be outside the EU/UK.',
+    );
+    return;
+  }
   const token = variables.CLOUDFLARE_API_TOKEN;
   if (!token) {
     throw new Error(

@@ -7,7 +7,9 @@ The browser preview uses sample records because local Auth0 is not configured.
 - Main navigation wraps onto a second row on phones.
 - Case document previews keep portrait proportions and fit two columns at 320px.
 - Document details and form groups stack into one column below their breakpoints.
-- Admin tabs use two rows on phones; access controls remain visible without page scrolling.
+- Admin navigation uses a vertical list above the active panel on phones and a
+  sidebar beside the active panel at 1024px and above. Keyboard navigation follows
+  the vertical tab orientation, with 44px minimum targets.
 - Long names, emails and case titles were checked for horizontal page overflow.
   Breadcrumbs truncate visually while retaining their complete accessible labels.
 - Person/case creation dialogs are limited by the dynamic viewport height and scroll

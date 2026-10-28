@@ -8,6 +8,7 @@ import { backups } from './backups';
 import { authenticate } from './auth';
 import { documents } from './documents';
 import type { WorkerContext } from './context';
+import { legacyAuth } from './legacy-auth';
 
 const app = new Hono<WorkerContext>();
 app.use('/api/*', secureHeaders());
@@ -16,6 +17,7 @@ app.use('/api/*', async (context, next) => {
   await next();
 });
 app.get('/api/health', (context) => context.json({ status: 'ok' }));
+app.route('/api/auth', legacyAuth);
 app.use('/api/*', auditAccess);
 app.use('/api/*', authenticate);
 app.get('/api/me', (context) => context.json(context.get('identity')));

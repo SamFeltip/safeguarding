@@ -9,4 +9,8 @@ await verifyCloudflareResidency(variables);
 for (const bucket of [documentsBucket, backupsBucket]) assertEuBucket(bucket);
 assertPrivateBuckets([documentsBucket, backupsBucket]);
 assertEuWorkflow(config.worker.exports.BackupWorkflow.name);
-console.info('EU buckets, Workflow, hostname, metadata boundary and bucket privacy verified.');
+console.info(
+  variables.CLOUDFLARE_RESIDENCY_MODE === 'best-effort'
+    ? 'EU buckets, Workflow and bucket privacy verified. Regional execution is not guaranteed.'
+    : 'EU buckets, Workflow, hostname, metadata boundary and bucket privacy verified.',
+);

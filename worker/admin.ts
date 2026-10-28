@@ -6,9 +6,11 @@ import { permissions } from '../shared/documents';
 import { requirePermission } from './authorization';
 import { setDocumentAudience } from './document-access';
 import type { WorkerContext } from './context';
+import { invitations } from './invitations';
 
 export const admin = new Hono<WorkerContext>();
 admin.use('*', requirePermission(permissions.admin, 'Administrator access required.'));
+admin.route('/invitations', invitations);
 admin.put('/:collection/:id/access', bodyLimit({ maxSize: 1024 }), async (context) => {
   const collection = z
     .enum(['documents', 'people', 'cases'])
